@@ -4,33 +4,27 @@
     <meta charset="UTF-8">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #1c1c1c; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { background: #2c2c2c; padding: 10px; border-radius: 10px; border-bottom: 3px solid #f3ba2f; }
-        .market { border: 2px solid #f3ba2f; border-radius: 15px; padding: 20px; background: #252525; }
-        input { width: 80%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; background: #444; color: white; }
-        button { background: #f3ba2f; color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; }
+        body { background: #1c1c1c; color: white; font-family: sans-serif; text-align: center; }
+        .box { background: #2c2c2c; border: 1px solid #f3ba2f; border-radius: 10px; padding: 15px; margin: 10px; }
+        input { width: 80%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; }
+        button { background: #f3ba2f; border: none; padding: 10px; border-radius: 5px; font-weight: bold; width: 100%; }
     </style>
 </head>
 <body>
-    <h2 style="color:#f3ba2f">🐣 CHICKEN EMPIRES</h2>
-    <div class="stats">
-        <div class="stat-box">💰 <b>1,250</b><br><small>Altın</small></div>
-        <div class="stat-box">💎 <b>85</b><br><small>Elmas</small></div>
-    </div>
-    <div class="market">
-        <h3>💎 ELMAS AL</h3>
-        <p>15$ = 500 Elmas</p>
-        <input type="text" id="p_name" placeholder="Oyun Adınızı Yazın">
-        <button onclick="buy()">15$ PAKETİNİ AL</button>
+    <h2 style="color:#f3ba2f">TAVUK İMPARATORLUĞU</h2>
+    <div class="box">
+        <h3>💎 500 ELMAS</h3>
+        <p>Fiyat: 15 Dolar</p>
+        <input type="text" id="isim" placeholder="Oyun İsminiz">
+        <button onclick="satinal()">SATIN AL</button>
     </div>
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        function buy() {
-            const name = document.getElementById('p_name').value;
-            if(!name) { alert("Adını yaz!"); return; }
-            tg.sendData(JSON.stringify({"kullanici": name, "paket": "15 Dolar"}));
+        function satinal() {
+            const isim = document.getElementById('isim').value;
+            if(!isim) { alert("İsim yazın!"); return; }
+            tg.sendData(JSON.stringify({"kullanici": isim, "paket": "15 Dolar"}));
             tg.close();
         }
     </script>
