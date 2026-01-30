@@ -3,136 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Birds Empire Clone</title>
+    <title>Birds Empire Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg-color: #1a1a1a; --card-bg: #2a2a2a; --text-color: #ffffff; --accent-color: #ffcc00; }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Inter', sans-serif; margin: 0; padding: 0; overflow: hidden; }
+        :root { --bg: #0b0b0b; --card: #151515; --accent: #f3ba2f; --text: #ffffff; --gray: #888; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; }
         
-        /* Üst Bilgi Paneli */
-        .header { padding: 20px; text-align: center; background: linear-gradient(to bottom, #333, var(--bg-color)); }
-        .balance-container { font-size: 32px; font-weight: bold; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .balance-container img { width: 40px; }
+        /* Üst Header */
+        .header { display: flex; justify-content: space-around; padding: 15px; background: #000; border-bottom: 2px solid #222; }
+        .stat-item { text-align: center; }
+        .stat-label { font-size: 10px; color: var(--gray); text-transform: uppercase; }
+        .stat-value { display: block; font-weight: bold; color: var(--accent); font-size: 14px; }
 
-        /* Ana İçerik Alanı */
-        .content { height: calc(100vh - 180px); overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        /* Sayfa Yapısı */
+        .content { height: calc(100vh - 160px); overflow-y: auto; padding: 20px; box-sizing: border-box; }
         .page { display: none; }
         .page.active { display: block; }
 
-        /* Tıklama Alanı (Ana Sayfa) */
-        .clicker-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-        .main-character { width: 200px; height: 200px; background: radial-gradient(circle, var(--accent-color) 0%, transparent 70%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 100px; cursor: pointer; transition: transform 0.1s; position: relative; }
-        .main-character:active { transform: scale(0.95); }
+        /* ANA SAYFA (Tap) */
+        .tap-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .balance-hero { font-size: 40px; font-weight: 900; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .bird-circle { width: 220px; height: 220px; background: radial-gradient(circle, #f3ba2f33 0%, transparent 70%); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.1s; }
+        .bird-circle:active { transform: scale(0.92); }
+        .bird-circle img { width: 180px; filter: drop-shadow(0 0 15px var(--accent)); }
+        
+        /* Enerji Barı */
+        .energy-box { width: 100%; max-width: 250px; margin-top: 30px; }
+        .energy-bar-bg { background: #222; height: 10px; border-radius: 5px; overflow: hidden; }
+        .energy-bar-fill { background: var(--accent); height: 100%; width: 100%; transition: width 0.3s; }
 
-        /* Alt Menü */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card-bg); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #444; }
-        .nav-item { text-align: center; color: #888; text-decoration: none; font-size: 12px; flex: 1; cursor: pointer; }
-        .nav-item.active { color: var(--accent-color); }
-        .nav-item i { font-size: 20px; display: block; margin-bottom: 5px; }
+        /* GELİŞTİR (Mine) KARTLARI */
+        .upgrade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .item-card { background: var(--card); border-radius: 16px; padding: 12px; border: 1px solid #333; position: relative; }
+        .item-icon { font-size: 24px; margin-bottom: 8px; }
+        .item-name { font-size: 13px; font-weight: bold; display: block; }
+        .item-profit { font-size: 11px; color: var(--accent); display: block; margin: 4px 0; }
+        .buy-btn { width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 8px; font-size: 12px; margin-top: 5px; }
+        .buy-btn:active { background: var(--accent); color: #000; }
 
-        /* Kartlar ve Listeler */
-        .card { background: var(--card-bg); border-radius: 15px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444; }
-        .btn-buy { background: var(--accent-color); color: black; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; }
+        /* Alt Navigasyon */
+        .navbar { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; padding: 10px 0 25px 0; border-top: 1px solid #222; }
+        .nav-btn { flex: 1; text-align: center; color: var(--gray); font-size: 11px; cursor: pointer; }
+        .nav-btn.active { color: var(--accent); }
+        .nav-btn i { font-size: 22px; margin-bottom: 4px; display: block; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div style="font-size: 14px; color: #aaa;">Toplam Kazanç</div>
-        <div class="balance-container">
-            <span>🥚</span> <span id="balance">0</span>
-        </div>
-        <div style="margin-top: 5px; font-size: 12px; color: var(--accent-color);">Saatlik Kazanç: +<span id="pps">0</span></div>
+        <div class="stat-item"><span class="stat-label">Tık Başı</span><span class="stat-value" id="tap-val">+1</span></div>
+        <div class="stat-item"><span class="stat-label">Saatlik Kâr</span><span class="stat-value" id="profit-val">0</span></div>
+        <div class="stat-item"><span class="stat-label">Seviye</span><span class="stat-value">Eğitmen</span></div>
     </div>
 
     <div class="content">
         <div id="home" class="page active">
-            <div class="clicker-container">
-                <div class="main-character" onclick="handleTap(event)">🦅</div>
-                <p style="margin-top: 20px; color: #aaa;">Kuşuna dokunarak enerji topla!</p>
+            <div class="tap-area">
+                <div class="balance-hero"><img src="https://i.ibb.co/L6M7VnS/eagle.png" style="width:40px"> <span id="balance">0</span></div>
+                <div class="bird-circle" onclick="handleTap(event)">
+                    <img src="https://i.ibb.co/L6M7VnS/eagle.png" alt="Bird">
+                </div>
+                <div class="energy-box">
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
+                        <span>⚡ Enerji</span> <span id="energy-text">1000/1000</span>
+                    </div>
+                    <div class="energy-bar-bg"><div id="energy-fill" class="energy-bar-fill"></div></div>
+                </div>
             </div>
         </div>
 
         <div id="mine" class="page">
-            <h3>Kuş İmparatorluğunu Geliştir</h3>
-            <div class="card">
-                <div><b>Yuva Gelişimi</b><br><small>+10/saat | Maliyet: 100</small></div>
-                <button class="btn-buy" onclick="buyUpgrade(10, 100)">Yükselt</button>
-            </div>
-            <div class="card">
-                <div><b>Tahıl Deposu</b><br><small>+50/saat | Maliyet: 500</small></div>
-                <button class="btn-buy" onclick="buyUpgrade(50, 500)">Yükselt</button>
+            <h3 style="margin-top:0">Mine & Upgrade</h3>
+            <div class="upgrade-grid">
+                <div class="item-card">
+                    <div class="item-icon">🥩</div>
+                    <b class="item-name">Taze Et</b>
+                    <span class="item-profit">+50/saat</span>
+                    <button class="buy-btn" onclick="buyUpgrade(50, 500)">500 🥚</button>
+                </div>
+                <div class="item-card">
+                    <div class="item-icon">🏔️</div>
+                    <b class="item-name">Yüksek Dağlar</b>
+                    <span class="item-profit">+200/saat</span>
+                    <button class="buy-btn" onclick="buyUpgrade(200, 2000)">2.000 🥚</button>
+                </div>
+                <div class="item-card">
+                    <div class="item-icon">🦅</div>
+                    <b class="item-name">Keskin Gözler</b>
+                    <span class="item-profit">+1 Tık Gücü</span>
+                    <button class="buy-btn" onclick="buyClick()">1.000 🥚</button>
+                </div>
             </div>
         </div>
 
-        <div id="tasks" class="page">
-            <h3>Günlük Görevler</h3>
-            <div class="card">
-                <div><i class="fab fa-telegram"></i> Kanala Katıl</div>
-                <button class="btn-buy">+500</button>
+        <div id="earn" class="page">
+            <h3>Görevleri Tamamla</h3>
+            <div class="item-card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span><i class="fab fa-telegram"></i> Telegram Kanalı</span>
+                <button class="buy-btn" style="width:auto">+5.000</button>
             </div>
-        </div>
-
-        <div id="friends" class="page">
-            <h3>Arkadaşlarını Davet Et</h3>
-            <p>Her arkadaşın için 2.500 🥚 kazan!</p>
-            <button class="btn-buy" style="width: 100%; padding: 15px;">Arkadaşını Çağır</button>
         </div>
     </div>
 
-    <nav class="nav-bar">
-        <div class="nav-item active" onclick="showPage('home', this)"><i class="fas fa-home"></i>Ana Sayfa</div>
-        <div class="nav-item" onclick="showPage('mine', this)"><i class="fas fa-hammer"></i>Geliştir</div>
-        <div class="nav-item" onclick="showPage('tasks', this)"><i class="fas fa-tasks"></i>Görevler</div>
-        <div class="nav-item" onclick="showPage('friends', this)"><i class="fas fa-users"></i>Arkadaşlar</div>
+    <nav class="navbar">
+        <div class="nav-btn active" onclick="changeTab('home', this)"><i class="fas fa-coins"></i>Borsa</div>
+        <div class="nav-btn" onclick="changeTab('mine', this)"><i class="fas fa-hammer"></i>Mine</div>
+        <div class="nav-btn" onclick="changeTab('earn', this)"><i class="fas fa-wallet"></i>Earn</div>
+        <div class="nav-btn" onclick="changeTab('friends', this)"><i class="fas fa-user-friends"></i>Friends</div>
     </nav>
 
     <script>
-        let balance = parseInt(localStorage.getItem('birds_balance')) || 0;
-        let pps = parseInt(localStorage.getItem('birds_pps')) || 0;
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let bal = parseFloat(localStorage.getItem('b_bal')) || 0;
+        let pph = parseInt(localStorage.getItem('b_pph')) || 0;
+        let tapPower = parseInt(localStorage.getItem('b_tap')) || 1;
+        let energy = parseInt(localStorage.getItem('b_nrg')) || 1000;
 
         function updateUI() {
-            document.getElementById('balance').innerText = Math.floor(balance).toLocaleString();
-            document.getElementById('pps').innerText = pps.toLocaleString();
-            localStorage.setItem('birds_balance', balance);
-            localStorage.setItem('birds_pps', pps);
+            document.getElementById('balance').innerText = Math.floor(bal).toLocaleString();
+            document.getElementById('profit-val').innerText = pph.toLocaleString();
+            document.getElementById('tap-val').innerText = "+" + tapPower;
+            document.getElementById('energy-text').innerText = energy + "/1000";
+            document.getElementById('energy-fill').style.width = (energy / 10) + "%";
+            
+            localStorage.setItem('b_bal', bal);
+            localStorage.setItem('b_pph', pph);
+            localStorage.setItem('b_tap', tapPower);
+            localStorage.setItem('b_nrg', energy);
         }
 
         function handleTap(e) {
-            balance += 1;
-            updateUI();
-            Telegram.WebApp.HapticFeedback.impactOccurred('light');
-        }
-
-        function buyUpgrade(addPps, cost) {
-            if (balance >= cost) {
-                balance -= cost;
-                pps += addPps;
+            if (energy >= tapPower) {
+                bal += tapPower;
+                energy -= tapPower;
                 updateUI();
-            } else {
-                Telegram.WebApp.showAlert("Yeterli yumurtan yok!");
+                tg.HapticFeedback.impactOccurred('medium');
             }
         }
 
-        function showPage(pageId, element) {
+        function buyUpgrade(addPph, cost) {
+            if (bal >= cost) {
+                bal -= cost;
+                pph += addPph;
+                updateUI();
+            }
+        }
+
+        function buyClick() {
+            if (bal >= 1000) {
+                bal -= 1000;
+                tapPower += 1;
+                updateUI();
+            }
+        }
+
+        function changeTab(pageId, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            element.classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
         }
 
-        // Pasif Kazanç (Saatlik kazancı saniyeye bölerek ekler)
+        // Pasif Gelir ve Enerji Yenileme
         setInterval(() => {
-            if (pps > 0) {
-                balance += (pps / 3600);
-                updateUI();
-            }
+            if (energy < 1000) energy += 1;
+            if (pph > 0) bal += (pph / 3600);
+            updateUI();
         }, 1000);
 
         updateUI();
-        Telegram.WebApp.expand();
     </script>
 </body>
-                </html>
-            
+</html>
