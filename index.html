@@ -1,35 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chicken Empires Mini App</title>
+    <title>Chicken Empires Pro</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #fdf6e3; text-align: center; font-family: sans-serif; margin: 0; padding: 20px; color: #5d4037; }
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); border: 2px solid #ffcc00; }
-        button { background: #ffcc00; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 20px; color: #5d4037; cursor: pointer; box-shadow: 0 4px #e6b800; }
-        button:active { transform: translateY(2px); box-shadow: 0 2px #e6b800; }
-        .stat { font-size: 24px; margin: 20px 0; font-weight: bold; }
+        body { background: #fdf6e3; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; color: #5d4037; user-select: none; }
+        .card { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 3px solid #ffcc00; margin-bottom: 20px; }
+        .stat-box { display: flex; justify-content: space-around; margin: 15px 0; background: #fffde7; padding: 10px; border-radius: 15px; }
+        .stat-val { font-weight: bold; color: #e65100; font-size: 1.2rem; }
+        .main-btn { background: #ffcc00; border: none; padding: 20px; width: 100%; border-radius: 20px; font-weight: bold; font-size: 24px; color: #5d4037; cursor: pointer; box-shadow: 0 6px #e6b800; transition: 0.1s; }
+        .main-btn:active { transform: translateY(4px); box-shadow: 0 2px #e6b800; }
+        .market-item { display: flex; justify-content: space-between; align-items: center; background: #fafafa; padding: 10px; margin: 10px 0; border-radius: 12px; border: 1px solid #ddd; }
+        .buy-btn { background: #4caf50; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; }
+        .buy-btn:disabled { background: #bdbdbd; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>🐔 Chicken Empires</h1>
-        <div style="font-size: 60px;">🥚</div>
-        <div class="stat">Yumurta: <span id="count">0</span></div>
-        <button onclick="addEgg()">Yumurta Topla!</button>
+        <div style="font-size: 80px;" id="chicken">🐔</div>
+        <div class="stat-box">
+            <div>🥚 Yumurta<br><span id="count" class="stat-val">0</span></div>
+            <div>⚡ Üretim/Sn<br><span id="perSecond" class="stat-val">0</span></div>
+        </div>
+        <button class="main-btn" onclick="clickEgg()">Yumurta Topla!</button>
     </div>
-    <script>
-        let count = 0;
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // Uygulamayı tam ekran açar
 
-        function addEgg() {
-            count++;
-            document.getElementById('count').innerText = count;
-            tg.HapticFeedback.impactOccurred('medium'); // Telefona titreşim verir
+    <div class="card">
+        <h3>🛒 Market</h3>
+        <div class="market-item">
+            <span>🐥 Genç Tavuk (+1/sn)<br><small id="price1">Maliyet: 50</small></span>
+            <button class="buy-btn" onclick="buyUpgrade(1, 50, 1)">Satın Al</button>
+        </div>
+        <div class="market-item">
+            <span>🏠 Küçük Kümes (+5/sn)<br><small id="price2">Maliyet: 250</small></span>
+            <button class="buy-btn" onclick="buyUpgrade(2, 250, 5)">Satın Al</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let eggs = parseFloat(localStorage.getItem('eggs')) || 0;
+        let pps = parseFloat(localStorage.getItem('pps')) || 0;
+
+        function updateDisplay() {
+            document.getElementById('count').innerText = Math.floor(eggs);
+            document.getElementById('perSecond').innerText = pps.toFixed(1);
         }
+
+        function clickEgg() {
+            eggs += 1;
+            updateDisplay();
+            saveData();
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function buyUpgrade(id, basePrice, power) {
+            let price = basePrice + (pps * 10); // Dinamik fiyat
+            if (eggs >= price) {
+                eggs -= price;
+                pps += power;
+                updateDisplay();
+                saveData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('eggs', eggs);
+            localStorage.setItem('pps', pps);
+        }
+
+        // Saniyelik Üretim Döngüsü
+        setInterval(() => {
+            if (pps > 0) {
+                eggs += pps / 10;
+                updateDisplay();
+                if (Math.floor(eggs) % 5 == 0) saveData(); // Her 5 yumurtada bir kaydet
+            }
+        }, 100);
+
+        updateDisplay();
     </script>
 </body>
 </html>
