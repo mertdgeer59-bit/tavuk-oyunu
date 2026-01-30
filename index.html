@@ -19,5 +19,172 @@
 
         /* Main Area */
         .container { margin-top: 80px; height: calc(100vh - 160px); overflow-y: auto; padding: 15px; box-sizing: border-box; }
-        .page { display: none
-        
+        .page { display: none; text-align: center; }
+        .page.active { display: block; }
+
+        /* Balance Hero */
+        .balance-hero { padding: 20px 0; }
+        .balance-hero h1 { font-size: 45px; margin: 10px 0; font-weight: 900; }
+        .currency-row { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .c-badge { background: #1c1c1e; padding: 6px 12px; border-radius: 20px; border: 1px solid #333; font-size: 12px; }
+        .c-badge b { color: var(--accent); }
+
+        /* Bird Tap */
+        .bird-btn { width: 200px; height: 200px; margin: 10px auto; display: block; cursor: pointer; transition: transform 0.1s; filter: drop-shadow(0 0 20px rgba(243,186,47,0.2)); }
+        .bird-btn:active { transform: scale(0.92); }
+
+        /* Upgrade Cards */
+        .chicken-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 50px; }
+        .card { background: var(--card); border-radius: 16px; padding: 15px; border: 1px solid #2c2c2e; text-align: left; }
+        .card-icon { font-size: 30px; margin-bottom: 8px; display: block; }
+        .card-name { font-size: 14px; font-weight: bold; display: block; }
+        .card-profit { font-size: 11px; color: #4caf50; display: block; margin: 5px 0 12px 0; }
+        .buy-btn { width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .buy-btn:active { background: var(--accent); color: #000; }
+
+        /* Bottom Nav */
+        .navbar { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; padding: 10px 0 30px 0; border-top: 1px solid #2c2c2e; z-index: 100; }
+        .nav-link { flex: 1; text-align: center; color: var(--sub); font-size: 10px; cursor: pointer; text-decoration: none; }
+        .nav-link.active { color: var(--accent); }
+        .nav-link i { font-size: 22px; margin-bottom: 5px; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="stat-card"><small>Tık Gücü</small><b id="tap-p">+1</b></div>
+        <div class="stat-card"><small>Saatlik Kâr</small><b id="profit-h">0</b></div>
+        <div class="stat-card"><small>Bilet</small><b id="tickets">0</b></div>
+    </div>
+
+    <div class="container">
+        <div id="home" class="page active">
+            <div class="balance-hero">
+                <div class="currency-row">
+                    <span class="c-badge">🟡 Altın: <b id="gold">0</b></span>
+                    <span class="c-badge">⚪ Gümüş: <b id="silver">1000</b></span>
+                </div>
+                <h1 id="eggs">0</h1>
+                <div style="color:var(--sub); font-size:12px;">TOPLAM YUMURTA</div>
+            </div>
+            
+            <img src="https://i.ibb.co/L6M7VnS/eagle.png" class="bird-btn" onclick="handleTap(event)">
+            
+            <button onclick="sell()" style="background:var(--accent); color:#000; border:none; padding:15px 30px; border-radius:15px; font-weight:900; margin-top:25px; cursor:pointer;">
+                🥚 YUMURTALARI SAT
+            </button>
+            <p style="color:var(--sub); font-size:10px; margin-top:8px;">100 Yumurta = 1 Altın + 1 Gümüş</p>
+        </div>
+
+        <div id="mine" class="page">
+            <h3 style="text-align:left; margin-bottom:15px;">Tavuk Çiftliği</h3>
+            <div class="chicken-grid">
+                <div class="card">
+                    <span class="card-icon">🐣</span>
+                    <b class="card-name">Normal Tavuk</b>
+                    <span class="card-profit">+42 /saat</span>
+                    <button class="buy-btn" onclick="buy('n', 42, 1000)">1.000 ⚪</button>
+                </div>
+                <div class="card">
+                    <span class="card-icon">🏡</span>
+                    <b class="card-name">Çiftlik Tavuğu</b>
+                    <span class="card-profit">+221 /saat</span>
+                    <button class="buy-btn" onclick="buy('c', 221, 5000)">5.000 ⚪</button>
+                </div>
+                <div class="card">
+                    <span class="card-icon">🌿</span>
+                    <b class="card-name">Organik Tavuk</b>
+                    <span class="card-profit">+1160 /saat</span>
+                    <button class="buy-btn" onclick="buy('o', 1160, 25000)">25.000 ⚪</button>
+                </div>
+                <div class="card">
+                    <span class="card-icon">✨</span>
+                    <b class="card-name">Altın Tavuk</b>
+                    <span class="card-profit">+6091 /saat</span>
+                    <button class="buy-btn" onclick="buy('a', 6091, 125000)">125.000 ⚪</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-link active" onclick="show('home', this)"><i class="fas fa-coins"></i>Borsa</div>
+        <div class="nav-link" onclick="show('mine', this)"><i class="fas fa-hammer"></i>Geliştir</div>
+        <div class="nav-link"><i class="fas fa-users"></i>Arkadaşlar</div>
+        <div class="nav-link"><i class="fas fa-wallet"></i>Airdrop</div>
+    </nav>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Data Management
+        let user = {
+            eggs: parseFloat(localStorage.getItem('ce_e')) || 0,
+            gold: parseInt(localStorage.getItem('ce_g')) || 0,
+            silver: localStorage.getItem('ce_s') !== null ? parseInt(localStorage.getItem('ce_s')) : 1000,
+            pph: parseInt(localStorage.getItem('ce_p')) || 0,
+            tk: 0
+        };
+
+        function ui() {
+            document.getElementById('eggs').innerText = Math.floor(user.eggs).toLocaleString();
+            document.getElementById('gold').innerText = user.gold.toLocaleString();
+            document.getElementById('silver').innerText = user.silver.toLocaleString();
+            document.getElementById('profit-h').innerText = "+" + user.pph.toLocaleString();
+            
+            localStorage.setItem('ce_e', user.eggs);
+            localStorage.setItem('ce_g', user.gold);
+            localStorage.setItem('ce_s', user.silver);
+            localStorage.setItem('ce_p', user.pph);
+        }
+
+        function handleTap(e) {
+            user.eggs += 1;
+            ui();
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function sell() {
+            if (user.eggs >= 100) {
+                let qty = Math.floor(user.eggs / 100);
+                user.eggs -= qty * 100;
+                user.gold += qty;
+                user.silver += qty;
+                ui();
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                tg.showAlert("Yetersiz yumurta! (Min 100)");
+            }
+        }
+
+        function buy(id, p, c) {
+            if (user.silver >= c) {
+                user.silver -= c;
+                user.pph += p;
+                ui();
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                tg.showAlert("Yetersiz Gümüş!");
+            }
+        }
+
+        function show(id, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        setInterval(() => {
+            if (user.pph > 0) {
+                user.eggs += (user.pph / 3600);
+                ui();
+            }
+        }, 1000);
+
+        ui();
+    </script>
+</body>
+    </html>
+    
