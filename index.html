@@ -1,67 +1,70 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>Tavuk İmparatorluğu</title>
-    <style>
-        :root { --altin: #f3ba2f; --bg: #1c1c1c; --card: #2c2c2c; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 20px; }
-        
-        /* Oyun İstatistik Paneli */
-        .baslik { font-size: 24px; color: var(--altin); margin-bottom: 20px; }
-        .istatistik-izgara { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px; }
-        .is-kart { background: var(--card); padding: 15px; border-radius: 12px; border-bottom: 4px solid var(--altin); }
-        .is-kart b { display: block; font-size: 18px; }
-        .is-kart kucuk { font-size: 12px; color: #aaa; }
+import firebase_admin
+from firebase_admin import credentials, db
+import telebot
+from telebot import types
+import json
 
-        /* Market Bölümü */
-        .market-kutusu { background: #252525; border: 2px solid var(--altin); border-radius: 20px; padding: 20px; margin-top: 20px; }
-        input { width: 90%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #444; background: #333; color: white; outline: none; }
-        .satin-al-btn { background: var(--altin); color: black; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; transition: 0.3s; }
-        .satin-al-btn:active { transform: scale(0.95); }
-    </style>
-</head>
-<body>
+# --- 1. AYARLAR ---
+# Senin Firebase ve Bot Bilgilerin
+FIREBASE_URL = "https://chickenempires-default-rtdb.europe-west1.firebasedatabase.app/"
+TOKEN = "8444886109:AAF2I-pnlavZjd0tUoQLiWh9J0f6Simjllg"
+MY_ID = "8387023870" # Senin Telegram ID'n
 
-    <div class="baslik">🐣 CHICKEN EMPIRES</div>
+bot = telebot.TeleBot(TOKEN)
 
-    <div class="istatistik-izgara">
-        <div class="is-kart">💰 <b>1,250</b> <kucuk>Altın</kucuk></div>
-        <div class="is-kart">💎 <b>85</b> <kucuk>Elmas</kucuk></div>
-        <div class="is-kart">🐔 <b>12</b> <kucuk>Tavuk</kucuk></div>
-        <div class="is-kart">⚔️ <b>4. Seviye</b> <kucuk>Rütbe</kucuk></div>
-    </div>
+# --- 2. FIREBASE BAĞLANTISI ---
+try:
+    if not firebase_admin._apps:
+        cred = credentials.Certificate("serviceAccountKey.json")
+        firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_URL})
+    print("✅ FIREBASE BAĞLANDI!")
+except Exception as e:
+    print(f"❌ JSON DOSYASI HATASI: {e}")
 
-    <div class="market-kutusu">
-        <h3>💎 ELMAS MARKET</h3>
-        <p>15$ Karşılığında 500 Elmas Al</p>
-        <input type="text" id="player_name" placeholder="Oyun İsminizi Yazın">
-        <button class="satin-al-btn" onclick="siparisVer()">15$ PAKETİNİ AL</button>
-    </div>
+# --- 3. KOMUTLAR VE MARKET İŞLEYİCİ ---
 
-    <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand(); // Mini App'i tam ekran yapar
+# Bot Başlatıldığında
+@bot.message_handler(commands=['start'])
+def start(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn = types.KeyboardButton("Market 💎", web_app=types.WebAppInfo(url="https://mertdgeer59-bit.github.io/tavuk-oyunu/"))
+    markup.add(btn)
+    bot.send_message(message.chat.id, "🐣 Tavuk İmparatorluğu'na Hoş Geldin!\nAlttaki Market butonundan alışveriş yapabilirsin.", reply_markup=markup)
 
-        function siparisVer() {
-            const isim = document.getElementById('player_name').value;
-            if (!isim) {
-                alert("Lütfen önce isminizi yazın!");
-                return;
-            }
+# Mini App'ten (GitHub) gelen veriyi yakala
+@bot.message_handler(content_types=['web_app_data'])
+def handle_data(message):
+    data = json.loads(message.web_app_data.data)
+    kullanici = data.get('kullanici')
+    paket = data.get('paket')
 
-            // Pydroid Botuna veri gönderir
-            const veri = {
-                "kullanici": isim,
-                "paket": "15 Dolar (500 Elmas)"
-            };
+    # Firebase'e Kaydet
+    ref = db.reference('odemeler').push({
+        'kullanici': kullanici,
+        'paket': paket,
+        'durum': 'BEKLEMEDE'
+    })
 
-            tg.sendData(JSON.stringify(veri)); 
-            alert("Talebiniz Mert'e iletildi!");
-            tg.close(); // Uygulamayı kapatır
-        }
-    </script>
-</body>
-</html>
+    # Sana Onay Butonu Gönder
+    markup = types.InlineKeyboardMarkup()
+    markup.add(
+        types.InlineKeyboardButton("✅ ONAYLA", callback_data=f"onay_{ref.key}_{kullanici}"),
+        types.InlineKeyboardButton("❌ REDDET", callback_data=f"red_{ref.key}_{kullanici}")
+    )
+    bot.send_message(MY_ID, f"🚨 YENİ SİPARİŞ!\n👤 Oyuncu: {kullanici}\n📦 Paket: {paket}", reply_markup=markup)
+
+# Onay/Red Butonlarına Basılınca
+@bot.callback_query_handler(func=lambda call: True)
+def callback_handler(call):
+    islem, ref_key, user_name = call.data.split("_")
+    
+    if islem == "onay":
+        db.reference(f'odemeler/{ref_key}').update({'durum': 'ONAYLANDI'})
+        bot.edit_message_text(f"✅ {user_name} adlı oyuncunun ödemesi ONAYLANDI!", call.message.chat.id, call.message.message_id)
+    else:
+        db.reference(f'odemeler/{ref_key}').update({'durum': 'REDDEDİLDİ'})
+        bot.edit_message_text(f"❌ {user_name} adlı oyuncunun ödemesi REDDEDİLDİ!", call.message.chat.id, call.message.message_id)
+
+# --- 4. SİSTEMİ ÇALIŞTIR ---
+print("🚀 BOT AKTİF! Siparişler bekleniyor...")
+bot.infinity_polling()
