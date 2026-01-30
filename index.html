@@ -5,36 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #141414; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .header { color: #f3ba2f; font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+        body { background-color: #141414; color: white; font-family: sans-serif; text-align: center; padding: 20px; margin: 0; }
+        .header { color: #f3ba2f; font-size: 24px; font-weight: bold; margin: 20px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .stats-container { background: #262626; border-radius: 12px; border-bottom: 4px solid #f3ba2f; display: flex; justify-content: space-around; padding: 15px; margin-bottom: 25px; }
-        .stat-item b { font-size: 18px; display: block; }
+        .stat-item b { font-size: 18px; display: block; color: white; }
         .stat-item span { color: #aaa; font-size: 12px; }
-        .market-card { background: #1c1c1c; border: 2px solid #f3ba2f; border-radius: 20px; padding: 25px; }
-        .market-card h3 { color: white; margin-top: 0; }
-        input { width: 90%; padding: 12px; margin: 15px 0; border-radius: 8px; border: none; background: #333; color: white; border: 1px solid #444; }
-        .buy-btn { background: #f3ba2f; color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 16px; cursor: pointer; }
+        .market-card { background: #1c1c1c; border: 2px solid #f3ba2f; border-radius: 20px; padding: 25px; margin: 0 10px; }
+        .market-card h3 { color: white; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        input { width: 90%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #444; background: #333; color: white; outline: none; }
+        .buy-btn { background: #f3ba2f; color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .buy-btn:active { transform: scale(0.98); background: #d4a027; }
     </style>
 </head>
 <body>
     <div class="header">🐣 CHICKEN EMPIRES</div>
+    
     <div class="stats-container">
         <div class="stat-item">💰 <b>1.250</b> <span>Altın</span></div>
         <div class="stat-item">🐔 <b>12</b> <span>Tavuk</span></div>
     </div>
+
     <div class="market-card">
         <h3>💎 ELMAS MARKET</h3>
         <p>15$ = 500 Elmas</p>
-        <input type="text" id="username" placeholder="Oyun Adınızı Yazın">
-        <button class="buy-btn" onclick="gonder()">15$ PAKETİNİ AL</button>
+        <input type="text" id="playername" placeholder="Oyun Adınızı Yazın">
+        <button class="buy-btn" onclick="order()">15$ PAKETİNİ AL</button>
     </div>
+
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        function gonder() {
-            const isim = document.getElementById('username').value;
-            if(!isim) { alert("Lütfen adınızı yazın!"); return; }
-            tg.sendData(JSON.stringify({"kullanici": isim, "paket": "15 Dolar"}));
+        function order() {
+            const name = document.getElementById('playername').value;
+            if(!name) { alert("İsim yazmalısın!"); return; }
+            tg.sendData(JSON.stringify({"kullanici": name, "paket": "15 Dolar"}));
             tg.close();
         }
     </script>
