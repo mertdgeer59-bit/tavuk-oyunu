@@ -1,70 +1,38 @@
-import firebase_admin
-from firebase_admin import credentials, db
-import telebot
-from telebot import types
-import json
-
-# --- 1. AYARLAR ---
-# Senin Firebase ve Bot Bilgilerin
-FIREBASE_URL = "https://chickenempires-default-rtdb.europe-west1.firebasedatabase.app/"
-TOKEN = "8444886109:AAF2I-pnlavZjd0tUoQLiWh9J0f6Simjllg"
-MY_ID = "8387023870" # Senin Telegram ID'n
-
-bot = telebot.TeleBot(TOKEN)
-
-# --- 2. FIREBASE BAĞLANTISI ---
-try:
-    if not firebase_admin._apps:
-        cred = credentials.Certificate("serviceAccountKey.json")
-        firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_URL})
-    print("✅ FIREBASE BAĞLANDI!")
-except Exception as e:
-    print(f"❌ JSON DOSYASI HATASI: {e}")
-
-# --- 3. KOMUTLAR VE MARKET İŞLEYİCİ ---
-
-# Bot Başlatıldığında
-@bot.message_handler(commands=['start'])
-def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn = types.KeyboardButton("Market 💎", web_app=types.WebAppInfo(url="https://mertdgeer59-bit.github.io/tavuk-oyunu/"))
-    markup.add(btn)
-    bot.send_message(message.chat.id, "🐣 Tavuk İmparatorluğu'na Hoş Geldin!\nAlttaki Market butonundan alışveriş yapabilirsin.", reply_markup=markup)
-
-# Mini App'ten (GitHub) gelen veriyi yakala
-@bot.message_handler(content_types=['web_app_data'])
-def handle_data(message):
-    data = json.loads(message.web_app_data.data)
-    kullanici = data.get('kullanici')
-    paket = data.get('paket')
-
-    # Firebase'e Kaydet
-    ref = db.reference('odemeler').push({
-        'kullanici': kullanici,
-        'paket': paket,
-        'durum': 'BEKLEMEDE'
-    })
-
-    # Sana Onay Butonu Gönder
-    markup = types.InlineKeyboardMarkup()
-    markup.add(
-        types.InlineKeyboardButton("✅ ONAYLA", callback_data=f"onay_{ref.key}_{kullanici}"),
-        types.InlineKeyboardButton("❌ REDDET", callback_data=f"red_{ref.key}_{kullanici}")
-    )
-    bot.send_message(MY_ID, f"🚨 YENİ SİPARİŞ!\n👤 Oyuncu: {kullanici}\n📦 Paket: {paket}", reply_markup=markup)
-
-# Onay/Red Butonlarına Basılınca
-@bot.callback_query_handler(func=lambda call: True)
-def callback_handler(call):
-    islem, ref_key, user_name = call.data.split("_")
-    
-    if islem == "onay":
-        db.reference(f'odemeler/{ref_key}').update({'durum': 'ONAYLANDI'})
-        bot.edit_message_text(f"✅ {user_name} adlı oyuncunun ödemesi ONAYLANDI!", call.message.chat.id, call.message.message_id)
-    else:
-        db.reference(f'odemeler/{ref_key}').update({'durum': 'REDDEDİLDİ'})
-        bot.edit_message_text(f"❌ {user_name} adlı oyuncunun ödemesi REDDEDİLDİ!", call.message.chat.id, call.message.message_id)
-
-# --- 4. SİSTEMİ ÇALIŞTIR ---
-print("🚀 BOT AKTİF! Siparişler bekleniyor...")
-bot.infinity_polling()
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #1c1c1c; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { background: #2c2c2c; padding: 10px; border-radius: 10px; border-bottom: 3px solid #f3ba2f; }
+        .market { border: 2px solid #f3ba2f; border-radius: 15px; padding: 20px; background: #252525; }
+        input { width: 80%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; background: #444; color: white; }
+        button { background: #f3ba2f; color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2 style="color:#f3ba2f">🐣 CHICKEN EMPIRES</h2>
+    <div class="stats">
+        <div class="stat-box">💰 <b>1,250</b><br><small>Altın</small></div>
+        <div class="stat-box">💎 <b>85</b><br><small>Elmas</small></div>
+    </div>
+    <div class="market">
+        <h3>💎 ELMAS AL</h3>
+        <p>15$ = 500 Elmas</p>
+        <input type="text" id="p_name" placeholder="Oyun Adınızı Yazın">
+        <button onclick="buy()">15$ PAKETİNİ AL</button>
+    </div>
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        function buy() {
+            const name = document.getElementById('p_name').value;
+            if(!name) { alert("Adını yaz!"); return; }
+            tg.sendData(JSON.stringify({"kullanici": name, "paket": "15 Dolar"}));
+            tg.close();
+        }
+    </script>
+</body>
+</html>
