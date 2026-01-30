@@ -222,4 +222,68 @@
     </script>
 </body>
     </html>
-    
+    <!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Senin mevcut oyun stilin */
+        body { background: #1c1c1c; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .stats-container { background: #2c2c2c; border: 2px solid #f3b12f; border-radius: 10px; padding: 15px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-item { background: #333; padding: 10px; border-radius: 5px; border-bottom: 3px solid #f3b12f; }
+        
+        /* Market Bölümü Stili */
+        .market-section { border: 2px dashed #f39c12; border-radius: 15px; padding: 20px; margin-top: 20px; }
+        .buy-btn { background: #f39c12; border: none; padding: 15px 30px; border-radius: 8px; color: white; font-weight: bold; font-size: 1.1em; cursor: pointer; width: 100%; transition: 0.3s; }
+        .buy-btn:active { transform: scale(0.95); }
+        input { padding: 12px; border-radius: 8px; border: none; width: 85%; margin-bottom: 15px; background: #444; color: white; border: 1px solid #f3b12f; }
+    </style>
+</head>
+<body>
+
+    <h2>🐣 Chicken Empires: Oyun Paneli</h2>
+
+    <div class="stats-container">
+        <div class="stat-item">💰 Altın: <span id="gold">100</span></div>
+        <div class="stat-item">💎 Elmas: <span id="diamond">0</span></div>
+        <div class="stat-item">🐔 Tavuk: <span id="chickens">5</span></div>
+        <div class="stat-item">⚔️ Seviye: <span id="level">1</span></div>
+    </div>
+
+    <div class="market-section">
+        <h3>🛒 Market: Elmas Paketi</h3>
+        <p>15 Dolar Karşılığı 500 Elmas</p>
+        <input type="text" id="player_name" placeholder="Oyun İçindeki Adınızı Yazın">
+        <button class="buy-btn" onclick="orderDiamond()">💎 15$ PAKETİNİ AL</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Mini App'i tam ekran yapar
+
+        function orderDiamond() {
+            const name = document.getElementById('player_name').value;
+            
+            if (!name) {
+                alert("Lütfen önce oyun isminizi girin!");
+                return;
+            }
+
+            // Telegram Botuna Veri Gönderme
+            const orderData = {
+                "kullanici": name,
+                "paket": "15 Dolar (500 Elmas)",
+                "zaman": new Date().toLocaleString()
+            };
+
+            tg.sendData(JSON.stringify(orderData)); // Botun Python kısmına iletir
+            
+            alert("Siparişiniz Mert'e iletildi! Onay bekleyin.");
+            tg.close(); // İşlem bitince uygulamayı kapatır
+        }
+    </script>
+</body>
+</html>
+
