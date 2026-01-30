@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chicken Empires Mini App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #fdf6e3; text-align: center; font-family: sans-serif; margin: 0; padding: 20px; color: #5d4037; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); border: 2px solid #ffcc00; }
+        button { background: #ffcc00; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 20px; color: #5d4037; cursor: pointer; box-shadow: 0 4px #e6b800; }
+        button:active { transform: translateY(2px); box-shadow: 0 2px #e6b800; }
+        .stat { font-size: 24px; margin: 20px 0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🐔 Chicken Empires</h1>
+        <div style="font-size: 60px;">🥚</div>
+        <div class="stat">Yumurta: <span id="count">0</span></div>
+        <button onclick="addEgg()">Yumurta Topla!</button>
+    </div>
+    <script>
+        let count = 0;
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Uygulamayı tam ekran açar
+
+        function addEgg() {
+            count++;
+            document.getElementById('count').innerText = count;
+            tg.HapticFeedback.impactOccurred('medium'); // Telefona titreşim verir
+        }
+    </script>
+</body>
+</html>
