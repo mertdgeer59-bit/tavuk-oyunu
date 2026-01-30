@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chicken Empires: Pro</title>
+    <title>Chicken Empires: Business</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -28,7 +28,11 @@
         .btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; margin-top: 10px; }
         .btn-buy { background: var(--accent); color: #fff; }
         .btn-swap { background: var(--gold); color: #000; }
-        .btn-gold-silver { background: #fff; color: #000; font-size: 12px; }
+        
+        /* Borsa Giriş Alanı */
+        .swap-input-group { background: #1a1a1a; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #333; }
+        input { width: 100%; background: #222; border: 1px solid #444; padding: 10px; border-radius: 8px; color: #fff; text-align: center; font-weight: bold; margin-bottom: 10px; outline: none; }
+        .max-link { font-size: 10px; color: var(--gold); text-decoration: underline; cursor: pointer; float: right; margin-bottom: 5px; }
 
         .navbar { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; padding: 10px 0 30px; border-top: 1px solid #222; }
         .nav-item { flex: 1; text-align: center; color: #555; font-size: 10px; cursor: pointer; }
@@ -51,10 +55,7 @@
         </div>
 
         <div id="p-gorevler" class="page">
-            <div class="p-card" style="text-align:center;">
-                <i class="fas fa-star fa-2x" style="color:var(--gold);"></i>
-                <p>Yeni görevler yakında eklenecek!</p>
-            </div>
+            <div class="p-card" style="text-align:center;"><i class="fas fa-star fa-2x" style="color:var(--gold);"></i><p>Görevler Yakında!</p></div>
         </div>
 
         <div id="p-tavuklar" class="page">
@@ -62,16 +63,18 @@
         </div>
 
         <div id="p-depo" class="page active">
-            <div class="p-card" style="text-align:center; padding: 25px 15px;">
-                <small style="color:#888;">BİRİKEN YUMURTALAR</small>
-                <h1 id="e-val" style="font-size:45px; margin:10px 0;">0</h1>
-                <div style="color:var(--accent); font-weight:bold;">+<span id="pph-val">0</span> / Saat</div>
+            <div class="p-card" style="text-align:center; padding: 20px 15px;">
+                <small style="color:#888;">ÜRETİLEN YUMURTALAR</small>
+                <h1 id="e-val" style="font-size:45px; margin:5px 0;">0</h1>
+                <div style="color:var(--accent); font-weight:bold; margin-bottom:15px;">+<span id="pph-val">0</span> / Saat</div>
                 
-                <button class="btn btn-swap" onclick="eggToGoldSilver()">100 YUMURTA ➔ 1 ALTIN + 1 GÜMÜŞ</button>
+                <button class="btn btn-swap" onclick="eggToGoldSilver()">YUMURTALARI TAKAS ET<br><small>(100 Yumurta = 1 Altın + 1 Gümüş)</small></button>
                 
-                <div style="margin-top:20px; border-top: 1px solid #333; padding-top:15px;">
-                    <small style="color:#888; display:block; margin-bottom:10px;">KALDIRAÇLI TAKAS</small>
-                    <button class="btn btn-gold-silver" onclick="goldToSilver()">1 ALTIN ➔ 1.2 GÜMÜŞ PARAYA ÇEVİR</button>
+                <div class="swap-input-group">
+                    <span class="max-link" onclick="setMaxGold()">Hepsini Seç</span>
+                    <small style="color:#888; display:block; text-align:left; margin-bottom:5px;">Altın Bozdur (1.2x Kaldıraç)</small>
+                    <input type="number" id="gold-input" placeholder="Miktar Girin" min="1">
+                    <button class="btn" style="background:#fff; color:#000; margin-top:0;" onclick="goldToSilverMulti()">ALTINLARI GÜMÜŞE ÇEVİR</button>
                 </div>
             </div>
         </div>
@@ -89,7 +92,7 @@
         tg.expand();
 
         let data = {
-            s: parseInt(localStorage.getItem('ce_s')) || 1000,
+            s: parseFloat(localStorage.getItem('ce_s')) || 1000,
             g: parseInt(localStorage.getItem('ce_g')) || 0,
             e: parseFloat(localStorage.getItem('ce_e')) || 0,
             p: parseInt(localStorage.getItem('ce_p')) || 0,
@@ -115,7 +118,7 @@
         ];
 
         function sync() {
-            document.getElementById('s-val').innerText = data.s.toLocaleString();
+            document.getElementById('s-val').innerText = Math.floor(data.s).toLocaleString();
             document.getElementById('g-val').innerText = data.g.toLocaleString();
             document.getElementById('t-val').innerText = data.t.toLocaleString();
             document.getElementById('e-val').innerText = Math.floor(data.e).toLocaleString();
@@ -157,17 +160,49 @@
             `).join('');
         }
 
+        function setMaxGold() {
+            document.getElementById('gold-input').value = data.g;
+        }
+
+        function goldToSilverMulti() {
+            let val = parseInt(document.getElementById('gold-input').value);
+            if (isNaN(val) || val <= 0) {
+                tg.showAlert("Lütfen geçerli bir miktar girin.");
+                return;
+            }
+            if (data.g >= val) {
+                data.g -= val;
+                data.s += (val * 1.2);
+                document.getElementById('gold-input').value = "";
+                sync();
+                tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert(`${val} Altın, ${(val * 1.2).toFixed(1)} Gümüşe çevrildi!`);
+            } else {
+                tg.showAlert("Yetersiz Altın bakiyesi!");
+            }
+        }
+
+        function eggToGoldSilver() {
+            if(data.e >= 100) {
+                let chunks = Math.floor(data.e / 100);
+                data.e -= chunks * 100;
+                data.g += chunks;
+                data.s += chunks;
+                sync();
+                tg.HapticFeedback.impactOccurred('medium');
+            } else { tg.showAlert("En az 100 Yumurta gerekli!"); }
+        }
+
         function buyBird(p, c) {
             if(data.s >= c) { data.s -= c; data.p += p; sync(); tg.HapticFeedback.notificationOccurred('success'); }
             else { tg.showAlert("Yetersiz Gümüş!"); }
         }
 
         function buyPack(usd) {
-            tg.showConfirm(`${usd}$ Paket Alınsın mı?`, (ok) => {
+            tg.showConfirm(`${usd}$ ödeme onaylansın mı?`, (ok) => {
                 if(ok) {
                     const pk = packs.find(x => x.usd === usd);
-                    const pphAdd = (pk.n*42) + (pk.c*221) + (pk.o*1160) + (pk.a*6091) + (pk.k*31979);
-                    data.p += pphAdd;
+                    data.p += (pk.n*42) + (pk.c*221) + (pk.o*1160) + (pk.a*6091) + (pk.k*31979);
                     data.s += pk.s;
                     data.t += pk.b + Math.floor(usd/10);
                     sync();
@@ -177,30 +212,9 @@
         }
 
         function buySilverManual() {
-            tg.showConfirm("1$ = 12.000 Gümüş Alınsın mı?", (ok) => {
+            tg.showConfirm("1$ karşılığında 12.000 Gümüş almak ister misiniz?", (ok) => {
                 if(ok) { data.s += 12000; sync(); }
             });
-        }
-
-        // --- TAKAS SİSTEMİ ---
-        function eggToGoldSilver() {
-            if(data.e >= 100) {
-                let chunks = Math.floor(data.e / 100);
-                data.e -= chunks * 100;
-                data.g += chunks;
-                data.s += chunks;
-                sync();
-                tg.HapticFeedback.impactOccurred('medium');
-            } else { tg.showAlert("En az 100 Yumurta Gerekli!"); }
-        }
-
-        function goldToSilver() {
-            if(data.g >= 1) {
-                data.g -= 1;
-                data.s += 1.2; // 1 Altın = 1.2 Gümüş
-                sync();
-                tg.HapticFeedback.impactOccurred('light');
-            } else { tg.showAlert("Dönüştürecek Altın Yok!"); }
         }
 
         setInterval(() => { if(data.p > 0) { data.e += (data.p / 3600); sync(); } }, 1000);
